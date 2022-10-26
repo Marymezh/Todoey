@@ -12,8 +12,14 @@ class ToDoListViewController: UITableViewController {
     
     private var itemArray = ["AAAA", "BBB", "CCC"]
     
+    private let defaults = UserDefaults.standard
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+            itemArray = items
+        }
     }
     // MARK - TableView Datasource and Delegate Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -49,6 +55,7 @@ class ToDoListViewController: UITableViewController {
             if let newItemName = alert.textFields?[0].text,
                newItemName != "" {
                 self.itemArray.append(newItemName)
+                self.defaults.set(self.itemArray, forKey: "ToDoListArray")
                 self.tableView.reloadData()
             } else {
                 self.showErrorAlert(text: "You forgot to enter new item name!")
