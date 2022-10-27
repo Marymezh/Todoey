@@ -18,18 +18,8 @@ class ToDoListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let newItem = Item()
-        newItem.title = "Find Mike"
-        itemArray.append(newItem)
 
-        let newItem2 = Item()
-        newItem2.title = "Run away"
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item()
-        newItem3.title = "Good day"
-        itemArray.append(newItem3)
+        loadItems()
     }
     
     // MARK - TableView Datasource and Delegate Methods
@@ -93,5 +83,19 @@ class ToDoListViewController: UITableViewController {
         }
         tableView.reloadData()
     }
+    
+    private func loadItems() {
+        
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+  //              self.tableView.reloadData()
+            } catch {
+                self.showErrorAlert(text: "Unable to load saved items")
+            }
+        }
+    }
+    
 }
 
