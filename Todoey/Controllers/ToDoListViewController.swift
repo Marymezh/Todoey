@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 class ToDoListViewController: UITableViewController {
     
@@ -15,8 +16,8 @@ class ToDoListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-            print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
- //       loadItems()
+ 
+        loadItems()
     }
     
     // MARK - TableView Datasource and Delegate Methods
@@ -82,18 +83,14 @@ class ToDoListViewController: UITableViewController {
         tableView.reloadData()
     }
     
-//    private func loadItems() {
-//
-//        if let data = try? Data(contentsOf: dataFilePath!) {
-//            let decoder = PropertyListDecoder()
-//            do {
-//                itemArray = try decoder.decode([Item].self, from: data)
-//  //              self.tableView.reloadData()
-//            } catch {
-//                self.showErrorAlert(text: "Unable to load saved items")
-//            }
-//        }
-//    }
+    private func loadItems() {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+           itemArray =  try context.fetch(request)
+        } catch {
+            showErrorAlert(text: "Error fetching data from context \(error)")
+        }
+    }
     
 }
 
