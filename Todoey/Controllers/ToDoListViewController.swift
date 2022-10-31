@@ -17,13 +17,18 @@ class ToDoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        setupGuestureRecognizer()
         loadItems()
-        let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))
-        tableView.addGestureRecognizer(longpress)
         
     }
     
-    // MARK: TableView Datasource and Delegate Methods
+    private func setupGuestureRecognizer() {
+        
+        let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))
+        tableView.addGestureRecognizer(longpress)
+    }
+    
+    // MARK: - TableView Datasource and Delegate Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
     }
@@ -49,7 +54,7 @@ class ToDoListViewController: UITableViewController {
         return true
     }
     
-    //MARK: Remove item from the table view and from the data base method
+    //MARK: - Remove item from the table view and from the data base method
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             context.delete(itemArray[indexPath.row])
@@ -59,7 +64,7 @@ class ToDoListViewController: UITableViewController {
         }
     }
     
-    //MARK: Add new items
+    //MARK: - Add new items
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
         
@@ -93,17 +98,17 @@ class ToDoListViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    //MARK: Load Items from data base
-    private func loadItems() {
-        let request: NSFetchRequest<Item> = Item.fetchRequest()
+    //MARK: - Load Items from data base
+    private func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
         do {
             itemArray =  try context.fetch(request)
         } catch {
             showErrorAlert(text: "Error fetching data from context \(error)")
         }
+        tableView.reloadData()
     }
     
-    // MARK: Long press guesture to rename item in the table view
+    // MARK: - Long press guesture to rename item in the table view
     @objc func handleLongPress(sender: UILongPressGestureRecognizer) {
         if sender.state == .began {
             let touchPoint = sender.location(in: tableView)
@@ -131,7 +136,7 @@ class ToDoListViewController: UITableViewController {
         }
     }
 
-    //MARK: Show error alert method
+    //MARK: - Show error alert method
     private func showErrorAlert(text: String) {
         let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
@@ -140,3 +145,25 @@ class ToDoListViewController: UITableViewController {
     }
 }
 
+//MARK: - ToDoList VC Extension - Searchbar delegate methods
+
+extension ToDoListViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        if let searchQuery = searchBar.text,
+           searchQuery != "" {
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchQuery)
+            request.predicate = predicate
+        } else {
+            showErrorAlert(text: "Enter search query")
+        }
+        
+        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+        request.sortDescriptors = [sortDescriptor]
+        loadItems(with: request)
+        
+    }
+    
+    
+    
+}
