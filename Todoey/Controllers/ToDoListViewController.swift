@@ -11,15 +11,12 @@ import UIKit
 class ToDoListViewController: UITableViewController {
     
     private var itemArray = [Item]()
-    
-   // private let defaults = UserDefaults.standard
-    
-    private let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    private var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        loadItems()
+            print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+ //       loadItems()
     }
     
     // MARK - TableView Datasource and Delegate Methods
@@ -39,7 +36,7 @@ class ToDoListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        encodeNewItem()
+        saveNewItem()
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -54,10 +51,11 @@ class ToDoListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add Item", style: .default) { action in
             if let newItemName = alert.textFields?[0].text,
                newItemName != "" {
-                let newItem = Item()
+                let newItem = Item(context: self.context)
                 newItem.title = newItemName
+                newItem.done = false
                 self.itemArray.append(newItem)
-                self.encodeNewItem()
+                self.saveNewItem()
             } else {
                 self.showErrorAlert(text: "You forgot to enter new item name!")
             }
@@ -73,29 +71,29 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true)
     }
     
-    private func encodeNewItem() {
-        let encoder = PropertyListEncoder()
+    private func saveNewItem() {
+
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            try context.save()
+            print("Data is saved")
         } catch {
             showErrorAlert(text: "Unable to create new Item")
         }
         tableView.reloadData()
     }
     
-    private func loadItems() {
-        
-        if let data = try? Data(contentsOf: dataFilePath!) {
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-  //              self.tableView.reloadData()
-            } catch {
-                self.showErrorAlert(text: "Unable to load saved items")
-            }
-        }
-    }
+//    private func loadItems() {
+//
+//        if let data = try? Data(contentsOf: dataFilePath!) {
+//            let decoder = PropertyListDecoder()
+//            do {
+//                itemArray = try decoder.decode([Item].self, from: data)
+//  //              self.tableView.reloadData()
+//            } catch {
+//                self.showErrorAlert(text: "Unable to load saved items")
+//            }
+//        }
+//    }
     
 }
 
