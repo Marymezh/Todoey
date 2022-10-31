@@ -18,6 +18,9 @@ class ToDoListViewController: UITableViewController {
         super.viewDidLoad()
  
         loadItems()
+        let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))
+        tableView.addGestureRecognizer(longpress)
+        
     }
     
     // MARK - TableView Datasource and Delegate Methods
@@ -36,8 +39,9 @@ class ToDoListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        saveNewItem()
+        saveItem()
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -56,7 +60,7 @@ class ToDoListViewController: UITableViewController {
                 newItem.title = newItemName
                 newItem.done = false
                 self.itemArray.append(newItem)
-                self.saveNewItem()
+                self.saveItem()
             } else {
                 self.showErrorAlert(text: "You forgot to enter new item name!")
             }
@@ -65,14 +69,7 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    private func showErrorAlert(text: String) {
-        let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-        alert.addAction(cancelAction)
-        present(alert, animated: true)
-    }
-    
-    private func saveNewItem() {
+    private func saveItem() {
 
         do {
             try context.save()
@@ -83,6 +80,8 @@ class ToDoListViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    //MARK - Load Items from data base
+    
     private func loadItems() {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
         do {
@@ -91,6 +90,40 @@ class ToDoListViewController: UITableViewController {
             showErrorAlert(text: "Error fetching data from context \(error)")
         }
     }
+    // MARK - Long press guesture to rename item in the table view
+    @objc func handleLongPress(sender: UILongPressGestureRecognizer) {
+        if sender.state == .began {
+            let touchPoint = sender.location(in: tableView)
+            if let indexPath = tableView.indexPathForRow(at: touchPoint) {
+                let alertController = UIAlertController(title: "Rename", message: nil, preferredStyle: .alert)
+                alertController.addTextField { textField in
+                    textField.placeholder = "Enter new title"
+                }
+                let saveAction = UIAlertAction(title: "Save", style: .default) { [self] action in
+                    if let itemTitle = alertController.textFields?[0].text,
+                       itemTitle != "" {
+                        self.itemArray[indexPath.row].setValue(itemTitle, forKey: "title")
+                        self.saveItem()
+                        self.tableView.reloadData()
+                    } else {
+                        self.showErrorAlert(text: "Unable to rename item")
+                    }
+                }
+                alertController.addAction(saveAction)
+                present(alertController, animated: true)
+
+            }
+            
+        }
+    }
     
+    
+    //MARK - Show error alert method
+    private func showErrorAlert(text: String) {
+        let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        alert.addAction(cancelAction)
+        present(alert, animated: true)
+    }
 }
 
