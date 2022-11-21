@@ -13,12 +13,15 @@ class ToDoListViewController: UITableViewController {
     
     private var itemArray = [Item]()
     private var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+   
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         setupGuestureRecognizer()
         loadItems()
+
+        navigationItem.hidesSearchBarWhenScrolling = false
         
     }
     
@@ -88,6 +91,7 @@ class ToDoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    //MARK: - Data manipulation methods (save, load)
     private func saveItem() {
         do {
             try context.save()
@@ -98,7 +102,6 @@ class ToDoListViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    //MARK: - Load Items from data base
     private func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
         do {
             itemArray =  try context.fetch(request)
@@ -124,7 +127,6 @@ class ToDoListViewController: UITableViewController {
                        itemTitle != "" {
                         self.itemArray[indexPath.row].setValue(itemTitle, forKey: "title")
                         self.saveItem()
-                        self.tableView.reloadData()
                     } else {
                         self.showErrorAlert(text: "Unable to rename item")
                     }
@@ -148,6 +150,7 @@ class ToDoListViewController: UITableViewController {
 //MARK: - ToDoList VC Extension - Searchbar delegate methods
 
 extension ToDoListViewController: UISearchBarDelegate {
+    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         let request: NSFetchRequest<Item> = Item.fetchRequest()
         if let searchQuery = searchBar.text,
