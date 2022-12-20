@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class ToDoListViewController: UITableViewController {
+class ToDoListViewController: SwipeTableViewController {
     
     private var itemArray: Results<Item>?
     private let realm = try! Realm()
@@ -22,11 +22,9 @@ class ToDoListViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setupGuestureRecognizer()
-
         navigationItem.hidesSearchBarWhenScrolling = false
-        
+        tableView.rowHeight = 65
     }
     
     private func setupGuestureRecognizer() {
@@ -41,7 +39,7 @@ class ToDoListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = itemArray?[indexPath.row] {
         cell.textLabel?.text = item.title
@@ -67,27 +65,7 @@ class ToDoListViewController: UITableViewController {
             tableView.deselectRow(at: indexPath, animated: true)
         }
     }
-        
-    
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    
-    //MARK: - Remove item from the table view and from the data base method
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            if let deletingItem = itemArray?[indexPath.row] {
-                do {
-                    try realm.write({
-                        realm.delete(deletingItem)
-                    })
-                } catch {
-                    print(error.localizedDescription)
-                }
-            }
-            tableView.reloadData()
-        }
-    }
+
     
     //MARK: - Add new items
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -124,6 +102,20 @@ class ToDoListViewController: UITableViewController {
     private func loadItems() {
         itemArray = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
+    }
+    
+    //MARK: - Delete items
+    
+    override func updateModel(at indexPath: IndexPath) {
+        if let deletingItem = itemArray?[indexPath.row] {
+            do {
+                try realm.write({
+                    realm.delete(deletingItem)
+                })
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
     }
     
     // MARK: - Long press guesture to rename item in the table view
@@ -180,13 +172,10 @@ extension ToDoListViewController: UISearchBarDelegate {
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
             loadItems()
-
+            
             DispatchQueue.main.async {
                 searchBar.resignFirstResponder()
             }
-
         }
     }
-
-    
 }
