@@ -164,7 +164,7 @@
 			);
 			mainGroup = EB2BE4ED239524DB00FB933B;
 			packageReferences = (
-				1A62739629338B9A00B95180 /* XCRemoteSwiftPackageReference "realm-swift" */,
+				1A62739629338B9A00B95180 /* XCRemoteSwiftPackageReference "realm-swift.git" */,
 				1A4270CD29516A6E0002C4FE /* XCRemoteSwiftPackageReference "SwipeCellKit" */,
 			);
 			productRefGroup = EB2BE4F7239524DB00FB933B /* Products */;
@@ -411,7 +411,7 @@
 				minimumVersion = 2.7.1;
 			};
 		};
-		1A62739629338B9A00B95180 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+		1A62739629338B9A00B95180 /* XCRemoteSwiftPackageReference "realm-swift.git" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/realm/realm-swift.git";
 			requirement = {
@@ -429,12 +429,12 @@
 		};
 		1A62739729338B9A00B95180 /* Realm */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1A62739629338B9A00B95180 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			package = 1A62739629338B9A00B95180 /* XCRemoteSwiftPackageReference "realm-swift.git" */;
 			productName = Realm;
 		};
 		1A62739929338B9A00B95180 /* RealmSwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1A62739629338B9A00B95180 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			package = 1A62739629338B9A00B95180 /* XCRemoteSwiftPackageReference "realm-swift.git" */;
 			productName = RealmSwift;
 		};
 /* End XCSwiftPackageProductDependency section */

@@ -20,12 +20,44 @@ class CategoryTableViewController: SwipeTableViewController {
         
         setupGuestureRecognizer()
         loadCategories()
-        tableView.rowHeight = 65
     }
+    
+    
+    
     
     private func setupGuestureRecognizer() {
         let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))
         tableView.addGestureRecognizer(longpress)
+    }
+    
+    //MARK: - Data manipulation methods
+    
+    private func loadCategories() {
+        categories = realm.objects(Category.self).sorted(byKeyPath: "name", ascending: true)
+        tableView.reloadData()
+    }
+    
+    private func save(category: Category) {
+        do {
+            try realm.write({
+                realm.add(category)
+            })
+        } catch {
+            showErrorAlert(text: "Unable to create new category")
+        }
+        tableView.reloadData()
+    }
+    
+    override func updateModel(at indexPath: IndexPath) {
+        if let deletingCategory = self.categories?[indexPath.row] {
+            do {
+                try self.realm.write({
+                    self.realm.delete(deletingCategory)
+                })
+            } catch {
+                print (error.localizedDescription)
+            }
+        }
     }
     
     //MARK: - Add new categories
@@ -37,7 +69,7 @@ class CategoryTableViewController: SwipeTableViewController {
             alertTextField.placeholder = "Enter new category name"
         }
         
-        let action = UIAlertAction(title: "Add category", style: .default) { action in
+        let action = UIAlertAction(title: "Add", style: .default) { action in
             if let newCategoryName = alert.textFields?[0].text,
                newCategoryName != "" {
                 let newCategory = Category()
@@ -51,33 +83,30 @@ class CategoryTableViewController: SwipeTableViewController {
         present(alert, animated: true, completion: nil)
     }
     
-    //MARK: - Data manipulation methods
-    
-    private func save(category: Category) {
-        do {
-            try realm.write({
-                realm.add(category)
-            })
-        } catch {
-            showErrorAlert(text: "Unable to create new category")
-        }
-        tableView.reloadData()
+    // MARK: - TableView DataSource methods
+
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return categories?.count ?? 1
+    }
+
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+
+        let category = categories?[indexPath.row]
+        cell.textLabel?.text = category?.name ?? "No categories added yet"
+
+        return cell
     }
     
-    private func loadCategories() {
-        categories = realm.objects(Category.self).sorted(byKeyPath: "name", ascending: true)
-        tableView.reloadData()
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItems", sender: self)
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
-    override func updateModel(at indexPath: IndexPath) {
-        if let deletingCategory = self.categories?[indexPath.row] {
-            do {
-                try self.realm.write({
-                    self.realm.delete(deletingCategory)
-                })
-            } catch {
-                print (error.localizedDescription)
-            }
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! ToDoListViewController
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
     
@@ -114,32 +143,7 @@ class CategoryTableViewController: SwipeTableViewController {
         }
     }
     
-    // MARK: - TableView DataSource methods
-
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories?.count ?? 1
-    }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = super.tableView(tableView, cellForRowAt: indexPath)
-
-//        let category = categories?[indexPath.row]
-        cell.textLabel?.text = categories?[indexPath.row].name ?? "No categories added yet"
-
-        return cell
-    }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        performSegue(withIdentifier: "goToItems", sender: self)
-        tableView.deselectRow(at: indexPath, animated: true)
-    }
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        let destinationVC = segue.destination as! ToDoListViewController
-        if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categories?[indexPath.row]
-        }
-    }
+   
 
     //MARK: - Show error alert method
     private func showErrorAlert(text: String) {

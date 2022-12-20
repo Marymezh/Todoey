@@ -24,7 +24,6 @@ class ToDoListViewController: SwipeTableViewController {
         super.viewDidLoad()
         setupGuestureRecognizer()
         navigationItem.hidesSearchBarWhenScrolling = false
-        tableView.rowHeight = 65
     }
     
     private func setupGuestureRecognizer() {
