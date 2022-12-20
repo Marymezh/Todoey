@@ -7,13 +7,14 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 
 class CategoryTableViewController: UITableViewController {
     
-    private var categoryArray = [Categories]()
-    private var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    private let realm = try! Realm()
+    
+    private var categories: Results<Category>?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,7 +24,6 @@ class CategoryTableViewController: UITableViewController {
     }
     
     private func setupGuestureRecognizer() {
-        
         let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))
         tableView.addGestureRecognizer(longpress)
     }
@@ -40,10 +40,9 @@ class CategoryTableViewController: UITableViewController {
         let action = UIAlertAction(title: "Add category", style: .default) { action in
             if let newCategoryName = alert.textFields?[0].text,
                newCategoryName != "" {
-                let newCategory = Categories(context: self.context)
+                let newCategory = Category()
                 newCategory.name = newCategoryName
-                self.categoryArray.append(newCategory)
-                self.saveCategory()
+                self.save(category: newCategory)
             } else {
                 self.showErrorAlert(text: "Category name can't be blank")
             }
@@ -54,21 +53,19 @@ class CategoryTableViewController: UITableViewController {
     
     //MARK: - Data manipulation methods
     
-    private func saveCategory() {
+    private func save(category: Category) {
         do {
-            try context.save()
+            try realm.write({
+                realm.add(category)
+            })
         } catch {
             showErrorAlert(text: "Unable to create new category")
         }
         tableView.reloadData()
     }
     
-    private func loadCategories(with request: NSFetchRequest<Categories> = Categories.fetchRequest()) {
-        do {
-            categoryArray =  try context.fetch(request)
-        } catch {
-            showErrorAlert(text: "Error fetching data from context \(error)")
-        }
+    private func loadCategories() {
+        categories = realm.objects(Category.self)
         tableView.reloadData()
     }
     
@@ -79,17 +76,23 @@ class CategoryTableViewController: UITableViewController {
             if let indexPath = tableView.indexPathForRow(at: touchPoint) {
                 let alertController = UIAlertController(title: "Rename", message: nil, preferredStyle: .alert)
                 alertController.addTextField { textField in
-                    textField.placeholder = "Enter new title"
-                    textField.text = self.categoryArray[indexPath.row].name
+                    textField.text = self.categories?[indexPath.row].name
                     textField.clearButtonMode = .whileEditing
                 }
                 let saveAction = UIAlertAction(title: "Save", style: .default) { [self] action in
                     if let categoryTitle = alertController.textFields?[0].text,
-                       categoryTitle != "" {
-                        self.categoryArray[indexPath.row].setValue(categoryTitle, forKey: "name")
-                        self.saveCategory()
+                       categoryTitle != "",
+                       let newCategory = categories?[indexPath.row] {
+                        do {
+                            try realm.write({
+                                newCategory.setValue(categoryTitle, forKey: "name")
+                            })
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+                        self.tableView.reloadData()
                     } else {
-                        self.showErrorAlert(text: "Unable to rename item")
+                        self.showErrorAlert(text: "Category name can't be blank!")
                     }
                 }
                 
@@ -102,14 +105,14 @@ class CategoryTableViewController: UITableViewController {
     // MARK: - Table view data source methods
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
+        return categories?.count ?? 1
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
 
-        let category = categoryArray[indexPath.row]
-        cell.textLabel?.text = category.name
+        let category = categories?[indexPath.row]
+        cell.textLabel?.text = category?.name ?? "No categories added yet"
 
         return cell
     }
@@ -122,7 +125,7 @@ class CategoryTableViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! ToDoListViewController
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categoryArray[indexPath.row]
+            destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
     
@@ -133,10 +136,16 @@ class CategoryTableViewController: UITableViewController {
     //MARK: - Remove item from the table view and from the data base method
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            context.delete(categoryArray[indexPath.row])
-            saveCategory()
-            categoryArray.remove(at: indexPath.row)
-            tableView.deleteRows(at: [indexPath], with: .fade)
+            if let deletingCategory = categories?[indexPath.row] {
+                do {
+                    try realm.write({
+                        categories?.realm?.delete(deletingCategory)
+                    })
+                } catch {
+                    print (error.localizedDescription)
+                }
+            }
+            tableView.reloadData()
         }
     }
     
