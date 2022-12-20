@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import SwipeCellKit
 
 
 class CategoryTableViewController: UITableViewController {
@@ -21,6 +22,7 @@ class CategoryTableViewController: UITableViewController {
         
         setupGuestureRecognizer()
         loadCategories()
+        tableView.rowHeight = 65
     }
     
     private func setupGuestureRecognizer() {
@@ -65,7 +67,7 @@ class CategoryTableViewController: UITableViewController {
     }
     
     private func loadCategories() {
-        categories = realm.objects(Category.self)
+        categories = realm.objects(Category.self).sorted(byKeyPath: "name", ascending: true)
         tableView.reloadData()
     }
     
@@ -109,7 +111,8 @@ class CategoryTableViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! SwipeTableViewCell
+        cell.delegate = self
 
         let category = categories?[indexPath.row]
         cell.textLabel?.text = category?.name ?? "No categories added yet"
@@ -128,27 +131,7 @@ class CategoryTableViewController: UITableViewController {
             destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
-    
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    
-    //MARK: - Remove item from the table view and from the data base method
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            if let deletingCategory = categories?[indexPath.row] {
-                do {
-                    try realm.write({
-                        categories?.realm?.delete(deletingCategory)
-                    })
-                } catch {
-                    print (error.localizedDescription)
-                }
-            }
-            tableView.reloadData()
-        }
-    }
-    
+
     //MARK: - Show error alert method
     private func showErrorAlert(text: String) {
         let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
@@ -156,4 +139,33 @@ class CategoryTableViewController: UITableViewController {
         alert.addAction(cancelAction)
         present(alert, animated: true)
     }
+}
+
+// MARK: - Swipe Cell Delegate Methods
+
+extension CategoryTableViewController: SwipeTableViewCellDelegate {
+    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+        guard orientation == .right else { return nil }
+        
+        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
+            if let deletingCategory = self.categories?[indexPath.row] {
+                do {
+                    try self.realm.write({
+                        self.realm.delete(deletingCategory)
+                    })
+                } catch {
+                    print (error.localizedDescription)
+                }
+            }
+        }
+        deleteAction.image = UIImage(systemName: "trash")
+        return [deleteAction]
+    }
+    
+    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
+        var options = SwipeOptions()
+        options.expansionStyle = .destructive
+        return options
+    }
+    
 }
