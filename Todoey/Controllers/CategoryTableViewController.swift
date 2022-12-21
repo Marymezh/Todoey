@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryTableViewController: SwipeTableViewController {
     
@@ -21,10 +22,7 @@ class CategoryTableViewController: SwipeTableViewController {
         setupGuestureRecognizer()
         loadCategories()
     }
-    
-    
-    
-    
+
     private func setupGuestureRecognizer() {
         let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))
         tableView.addGestureRecognizer(longpress)
@@ -74,6 +72,8 @@ class CategoryTableViewController: SwipeTableViewController {
                newCategoryName != "" {
                 let newCategory = Category()
                 newCategory.name = newCategoryName
+                newCategory.color = RandomFlatColorWithShade(.light).hexValue()
+                
                 self.save(category: newCategory)
             } else {
                 self.showErrorAlert(text: "Category name can't be blank")
@@ -92,9 +92,11 @@ class CategoryTableViewController: SwipeTableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
 
-        let category = categories?[indexPath.row]
-        cell.textLabel?.text = category?.name ?? "No categories added yet"
-
+        if let category = categories?[indexPath.row] {
+        cell.textLabel?.text = category.name
+        cell.backgroundColor = UIColor(hexString: category.color)
+        cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor ?? .white, returnFlat: true)
+        }
         return cell
     }
     
