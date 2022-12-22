@@ -21,11 +21,39 @@ class ToDoListViewController: SwipeTableViewController {
         }
     }
     
+    @IBOutlet weak var searchBar: UISearchBar!
+    
+    @IBOutlet weak var addButtonItem: UIBarButtonItem!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupGuestureRecognizer()
-        navigationItem.hidesSearchBarWhenScrolling = false
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupNavBarAppearance()
+    }
+
+private func setupNavBarAppearance() {
+    navigationItem.hidesSearchBarWhenScrolling = false
+    let appearance = UINavigationBarAppearance()
+    appearance.configureWithOpaqueBackground()
+    if let colorHex = selectedCategory?.color {
+        title = selectedCategory!.name
+        appearance.backgroundColor = UIColor(hexString: colorHex)
+        let titleAttribute = [NSAttributedString.Key.foregroundColor: ContrastColorOf(appearance.backgroundColor ?? .white, returnFlat: true)]
+        appearance.titleTextAttributes = titleAttribute
+        appearance.largeTitleTextAttributes = titleAttribute
+        guard let navBar = navigationController?.navigationBar else {fatalError()}
+        navBar.tintColor = ContrastColorOf(appearance.backgroundColor ?? .black, returnFlat: true)
+        addButtonItem.tintColor = ContrastColorOf(appearance.backgroundColor ?? .black, returnFlat: true)
+        navBar.standardAppearance = appearance
+        navBar.scrollEdgeAppearance = appearance
+        searchBar.barTintColor = UIColor(hexString: colorHex)
+        searchBar.searchTextField.backgroundColor = .white
+    }
+}
     
     private func setupGuestureRecognizer() {
         

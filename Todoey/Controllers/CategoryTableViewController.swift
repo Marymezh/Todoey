@@ -22,6 +22,25 @@ class CategoryTableViewController: SwipeTableViewController {
         setupGuestureRecognizer()
         loadCategories()
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        setupNavBarAppearance()
+    }
+    
+    private func setupNavBarAppearance() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .systemCyan
+        let titleAttribute = [NSAttributedString.Key.foregroundColor: UIColor.white]
+        appearance.titleTextAttributes = titleAttribute
+        appearance.largeTitleTextAttributes = titleAttribute
+        if let navBar = navigationController?.navigationBar {
+            navBar.scrollEdgeAppearance = appearance
+            navBar.standardAppearance = appearance
+        }
+    }
 
     private func setupGuestureRecognizer() {
         let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))

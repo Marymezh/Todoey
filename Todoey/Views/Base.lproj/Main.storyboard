@@ -39,13 +39,17 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="Items" id="LQk-6N-8EW">
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="qSO-Z9-w0J">
+                        <barButtonItem key="rightBarButtonItem" style="done" systemItem="add" id="qSO-Z9-w0J">
                             <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
                                 <action selector="addButtonPressed:" destination="Hj5-hv-ckk" id="TfV-kX-wwp"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
+                    <connections>
+                        <outlet property="addButtonItem" destination="qSO-Z9-w0J" id="BpE-e7-cm9"/>
+                        <outlet property="searchBar" destination="Yrj-5s-tYH" id="21A-VS-16B"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xgX-ki-73D" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
@@ -75,7 +79,7 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="ToDoey" largeTitleDisplayMode="always" id="ltR-rP-o9G">
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="uQa-Jz-K6D">
+                        <barButtonItem key="rightBarButtonItem" style="done" systemItem="add" id="uQa-Jz-K6D">
                             <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
                                 <action selector="addButtonPressed:" destination="XMH-0H-LmO" id="8PB-Q2-s1f"/>
