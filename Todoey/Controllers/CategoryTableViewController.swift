@@ -13,9 +13,9 @@ import ChameleonFramework
 class CategoryTableViewController: SwipeTableViewController {
     
     private let realm = try! Realm()
-    
     private var categories: Results<Category>?
-
+    private let alert = ErrorAlert()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -29,6 +29,8 @@ class CategoryTableViewController: SwipeTableViewController {
         setupNavBarAppearance()
     }
     
+    //   MARK: - Setup navigation bar appearance
+    
     private func setupNavBarAppearance() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
@@ -41,13 +43,8 @@ class CategoryTableViewController: SwipeTableViewController {
             navBar.standardAppearance = appearance
         }
     }
-
-    private func setupGuestureRecognizer() {
-        let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))
-        tableView.addGestureRecognizer(longpress)
-    }
     
-    //MARK: - Data manipulation methods
+    //MARK: - Data manipulation methods: load, save, delete
     
     private func loadCategories() {
         categories = realm.objects(Category.self).sorted(byKeyPath: "name", ascending: true)
@@ -60,7 +57,7 @@ class CategoryTableViewController: SwipeTableViewController {
                 realm.add(category)
             })
         } catch {
-            showErrorAlert(text: "Unable to create new category")
+            alert.showErrorAlert(text: "Unable to create new category")
         }
         tableView.reloadData()
     }
@@ -95,43 +92,20 @@ class CategoryTableViewController: SwipeTableViewController {
                 
                 self.save(category: newCategory)
             } else {
-                self.showErrorAlert(text: "Category name can't be blank")
+                self.alert.showErrorAlert(text: "Category name can't be blank")
             }
         }
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
     }
     
-    // MARK: - TableView DataSource methods
-
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories?.count ?? 1
-    }
-
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = super.tableView(tableView, cellForRowAt: indexPath)
-
-        if let category = categories?[indexPath.row] {
-        cell.textLabel?.text = category.name
-        cell.backgroundColor = UIColor(hexString: category.color)
-        cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor ?? .white, returnFlat: true)
-        }
-        return cell
-    }
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        performSegue(withIdentifier: "goToItems", sender: self)
-        tableView.deselectRow(at: indexPath, animated: true)
-    }
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        let destinationVC = segue.destination as! ToDoListViewController
-        if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categories?[indexPath.row]
-        }
-    }
-    
     // MARK: - Long press guesture to rename item in the table view
+    
+    private func setupGuestureRecognizer() {
+        let longpress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(sender:)))
+        tableView.addGestureRecognizer(longpress)
+    }
+    
     @objc func handleLongPress(sender: UILongPressGestureRecognizer) {
         if sender.state == .began {
             let touchPoint = sender.location(in: tableView)
@@ -154,7 +128,7 @@ class CategoryTableViewController: SwipeTableViewController {
                         }
                         self.tableView.reloadData()
                     } else {
-                        self.showErrorAlert(text: "Category name can't be blank!")
+                        self.alert.showErrorAlert(text: "Category name can't be blank!")
                     }
                 }
                 
@@ -164,14 +138,33 @@ class CategoryTableViewController: SwipeTableViewController {
         }
     }
     
-   
-
-    //MARK: - Show error alert method
-    private func showErrorAlert(text: String) {
-        let alert = UIAlertController(title: "Error", message: text, preferredStyle: .alert)
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
-        alert.addAction(cancelAction)
-        present(alert, animated: true)
+    // MARK: - TableView DataSource methods
+    
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return categories?.count ?? 1
+    }
+    
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        
+        if let category = categories?[indexPath.row] {
+            cell.textLabel?.text = category.name
+            cell.backgroundColor = UIColor(hexString: category.color)
+            cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor ?? .white, returnFlat: true)
+        }
+        return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        performSegue(withIdentifier: "goToItems", sender: self)
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! ToDoListViewController
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categories?[indexPath.row]
+        }
     }
 }
 
