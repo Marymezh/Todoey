@@ -11,7 +11,7 @@ import RealmSwift
 import UIKit
 
 class Category: Object {
-    @objc dynamic var name: String = ""
-    @objc dynamic var color: String = ""
-    let items = List<Item>()
+    @Persisted var name: String = ""
+    @Persisted var color: String = ""
+    @Persisted var items = List<Item>()
 }

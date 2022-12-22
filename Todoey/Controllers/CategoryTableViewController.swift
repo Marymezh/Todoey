@@ -12,7 +12,6 @@ import ChameleonFramework
 
 class CategoryTableViewController: SwipeTableViewController {
     
-    private let realm = try! Realm()
     private var categories: Results<Category>?
     private let alert = ErrorAlert()
     
@@ -27,6 +26,7 @@ class CategoryTableViewController: SwipeTableViewController {
         super.viewWillAppear(animated)
         
         setupNavBarAppearance()
+        tableView.reloadData()
     }
     
     //   MARK: - Setup navigation bar appearance
@@ -47,11 +47,13 @@ class CategoryTableViewController: SwipeTableViewController {
     //MARK: - Data manipulation methods: load, save, delete
     
     private func loadCategories() {
+        let realm = try! Realm()
         categories = realm.objects(Category.self).sorted(byKeyPath: "name", ascending: true)
         tableView.reloadData()
     }
     
     private func save(category: Category) {
+        let realm = try! Realm()
         do {
             try realm.write({
                 realm.add(category)
@@ -64,16 +66,20 @@ class CategoryTableViewController: SwipeTableViewController {
     
     override func updateModel(at indexPath: IndexPath) {
         if let deletingCategory = self.categories?[indexPath.row] {
+            let realm = try! Realm()
             do {
-                try self.realm.write({
-                    self.realm.delete(deletingCategory)
+                try realm.write({
+                    for item in deletingCategory.items {
+                        realm.delete(item)
+                    }
+                    realm.delete(deletingCategory)
                 })
             } catch {
                 print (error.localizedDescription)
             }
         }
     }
-    
+
     //MARK: - Add new categories
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -119,6 +125,7 @@ class CategoryTableViewController: SwipeTableViewController {
                     if let categoryTitle = alertController.textFields?[0].text,
                        categoryTitle != "",
                        let newCategory = categories?[indexPath.row] {
+                        let realm = try! Realm()
                         do {
                             try realm.write({
                                 newCategory.setValue(categoryTitle, forKey: "name")
@@ -149,9 +156,13 @@ class CategoryTableViewController: SwipeTableViewController {
         
         if let category = categories?[indexPath.row] {
             cell.textLabel?.text = category.name
+            cell.detailTextLabel?.text = String(category.items.count)
             cell.backgroundColor = UIColor(hexString: category.color)
+            cell.textLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
             cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor ?? .white, returnFlat: true)
+            cell.detailTextLabel?.textColor = ContrastColorOf(cell.backgroundColor ?? .white, returnFlat: true)
         }
+        
         return cell
     }
     

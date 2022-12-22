@@ -13,7 +13,6 @@ import ChameleonFramework
 class ToDoListViewController: SwipeTableViewController {
     
     private var itemArray: Results<Item>?
-    private let realm = try! Realm()
     private let alert = ErrorAlert()
     
     var selectedCategory: Category? {
@@ -67,6 +66,7 @@ class ToDoListViewController: SwipeTableViewController {
     
     override func updateModel(at indexPath: IndexPath) {
         if let deletingItem = itemArray?[indexPath.row] {
+            let realm = try! Realm()
             do {
                 try realm.write({
                     realm.delete(deletingItem)
@@ -89,8 +89,9 @@ class ToDoListViewController: SwipeTableViewController {
             if let newItemName = alert.textFields?[0].text,
                newItemName != "",
                let currentCategory = self.selectedCategory {
+                let realm = try! Realm()
                 do {
-                    try self.realm.write{
+                    try realm.write{
                         let newItem = Item()
                         newItem.title = newItemName
                         currentCategory.items.append(newItem)
@@ -128,6 +129,7 @@ class ToDoListViewController: SwipeTableViewController {
                     if let itemTitle = alertController.textFields?[0].text,
                        itemTitle != "",
                        let changingItem = itemArray?[indexPath.row] {
+                        let realm = try! Realm()
                         do {
                             try realm.write({
                                 changingItem.setValue(itemTitle, forKey: "title")
@@ -168,12 +170,14 @@ class ToDoListViewController: SwipeTableViewController {
             cell.textLabel?.text = "No items added yet"
         }
         cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor ?? .white, returnFlat: true)
+        cell.tintColor =  ContrastColorOf(cell.backgroundColor ?? .white, returnFlat: true)
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         if let selectedItem = itemArray?[indexPath.row] {
+            let realm = try! Realm()
             do {
                 try realm.write({
                     selectedItem.done = !selectedItem.done
